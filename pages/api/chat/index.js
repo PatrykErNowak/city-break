@@ -16,6 +16,15 @@ const ollamaConfig = {
   temperature: 0,
 };
 
+const systemChatPrompts = {
+  convertToQuery:
+    'Never answer to a question.Try to refer to the chat history to get specific city information and Convert in english the following user input into a single query for the browser search engine: {input}',
+  handleChatPrompt: {
+    mainFlow: `You are an expert in providing information about cities in Poland. Answer in polish the user's questions based on the below context:\n\n{context}`,
+    errorFlow: 'Inform the person that you are responding based on the data available in your database in polish.',
+  },
+};
+// const answerChatPrompt = `You are an expert in providing information about cities in Poland. Answer in polish the user's questions based on the below context:\n\n{context}`;
 // ----------------------------------------------------
 
 export default async function handler(req, res) {
@@ -24,7 +33,7 @@ export default async function handler(req, res) {
     await handleChatPrompt(req, res);
   }
   if (method === 'DELETE') {
-    clearChatHistory();
+    await clearChatHistory(req, res);
   }
 }
 
@@ -37,8 +46,10 @@ const memory = new BufferMemory({ memoryKey: 'history', returnMessages: true });
 /**
  * Clear chat conversation history
  */
-async function clearChatHistory() {
+async function clearChatHistory(req, res) {
   await memory.clear();
+  const { messages } = memory.chatHistory;
+  messages.length === 0 ? res.status(200).end() : res.status(404).end();
 }
 
 /**
@@ -54,9 +65,7 @@ function userInputToQuery(userInput) {
     });
 
     const chatprompt = ChatPromptTemplate.fromMessages([
-      SystemMessagePromptTemplate.fromTemplate(
-        'Never answer to a question.Try to refer to the chat history to get specific city information and Convert the following user input into a single query for the browser search engine: {input}'
-      ),
+      SystemMessagePromptTemplate.fromTemplate(systemChatPrompts.convertToQuery),
       new MessagesPlaceholder('history'),
       HumanMessagePromptTemplate.fromTemplate('{input}'),
     ]);
@@ -104,22 +113,16 @@ async function handleChatPrompt(req, res) {
     // Define your question and query
     const query = await userInputToQuery(userPrompt);
     const question = query;
-    console.log(query);
 
     // Use SerpAPILoader to load web search results
-    const loader = new SerpAPILoader({ q: query, apiKey, gl: 'pl', hl: 'pl', engine: 'google', num: 20 });
+    const loader = new SerpAPILoader({ q: query, apiKey, gl: 'pl', hl: 'pl', engine: 'google', num: 25 });
     const docs = await loader.load();
 
     // Use MemoryVectorStore to store the loaded documents in memory
     const vectorStore = await MemoryVectorStore.fromDocuments(docs, embeddings);
 
-    // TODO pooprawic prompt
     const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
-      [
-        'system',
-        `You are an expert in providing information about cities in Poland. Answer the user's questions in polish`,
-        // `You are an expert in providing information about cities in Poland. Answer the user's questions based on the below context in polish:\n\n{context}`,
-      ],
+      ['system', systemChatPrompts.handleChatPrompt.mainFlow],
       ['human', '{input}'],
     ]);
 
@@ -138,9 +141,8 @@ async function handleChatPrompt(req, res) {
 
     res.end();
   } catch (error) {
-    console.log('error block');
     const chatprompt = ChatPromptTemplate.fromMessages([
-      SystemMessagePromptTemplate.fromTemplate('Inform the person that you are responding based on the data available in your database in polish.'),
+      SystemMessagePromptTemplate.fromTemplate(systemChatPrompts.handleChatPrompt.errorFlow),
       new MessagesPlaceholder('history'),
       HumanMessagePromptTemplate.fromTemplate('{input}'),
     ]);
