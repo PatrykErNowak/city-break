@@ -59,23 +59,27 @@ async function clearChatHistory(req, res) {
  * @returns {Promise<string>} search query
  */
 function userInputToQuery(userInput) {
-  return new Promise(async function (res, _) {
-    const llm = new ChatOllama({
-      ...ollamaConfig,
-    });
+  return new Promise(async function (resolve, reject) {
+    try {
+      const llm = new ChatOllama({
+        ...ollamaConfig,
+      });
 
-    const chatprompt = ChatPromptTemplate.fromMessages([
-      SystemMessagePromptTemplate.fromTemplate(systemChatPrompts.convertToQuery),
-      new MessagesPlaceholder('history'),
-      HumanMessagePromptTemplate.fromTemplate('{input}'),
-    ]);
+      const chatprompt = ChatPromptTemplate.fromMessages([
+        SystemMessagePromptTemplate.fromTemplate(systemChatPrompts.convertToQuery),
+        new MessagesPlaceholder('history'),
+        HumanMessagePromptTemplate.fromTemplate('{input}'),
+      ]);
 
-    const chain = new ConversationChain({ llm: llm, memory: memory, prompt: chatprompt });
-    const result = await chain.invoke({
-      input: userInput,
-    });
+      const chain = new ConversationChain({ llm: llm, memory: memory, prompt: chatprompt });
+      const result = await chain.invoke({
+        input: userInput,
+      });
 
-    res(result.response);
+      resolve(result.response);
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 
@@ -141,17 +145,21 @@ async function handleChatPrompt(req, res) {
 
     res.end();
   } catch (error) {
-    const chatprompt = ChatPromptTemplate.fromMessages([
-      SystemMessagePromptTemplate.fromTemplate(systemChatPrompts.handleChatPrompt.errorFlow),
-      new MessagesPlaceholder('history'),
-      HumanMessagePromptTemplate.fromTemplate('{input}'),
-    ]);
+    try {
+      const chatprompt = ChatPromptTemplate.fromMessages([
+        SystemMessagePromptTemplate.fromTemplate(systemChatPrompts.handleChatPrompt.errorFlow),
+        new MessagesPlaceholder('history'),
+        HumanMessagePromptTemplate.fromTemplate('{input}'),
+      ]);
 
-    const chain = new ConversationChain({ llm: llm, memory: memory, prompt: chatprompt });
-    await chain.invoke({
-      input: userPrompt,
-    });
+      const chain = new ConversationChain({ llm: llm, memory: memory, prompt: chatprompt });
+      await chain.invoke({
+        input: userPrompt,
+      });
 
-    res.end();
+      res.end();
+    } catch (error) {
+      res.status(500).end();
+    }
   }
 }
