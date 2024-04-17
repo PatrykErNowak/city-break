@@ -10,8 +10,10 @@ import { ConversationChain } from 'langchain/chains';
 
 // CONFIG
 const apiKey = process.env.SERPAPI_API_KEY;
+const ollamaPort = process.env.OLLAMA_PORT || 11434;
+
 const ollamaConfig = {
-  baseUrl: 'http://localhost:11434', // Default value
+  baseUrl: `http://localhost:${ollamaPort}`, // Default value
   model: 'openchat',
   temperature: 0,
 };
@@ -24,7 +26,6 @@ const systemChatPrompts = {
     errorFlow: 'Inform the person that you are responding based on the data available in your database in polish.',
   },
 };
-// const answerChatPrompt = `You are an expert in providing information about cities in Poland. Answer in polish the user's questions based on the below context:\n\n{context}`;
 // ----------------------------------------------------
 
 export default async function handler(req, res) {
@@ -119,7 +120,7 @@ async function handleChatPrompt(req, res) {
     const question = query;
 
     // Use SerpAPILoader to load web search results
-    const loader = new SerpAPILoader({ q: query, apiKey, gl: 'pl', hl: 'pl', engine: 'google', num: 25 });
+    const loader = new SerpAPILoader({ q: query, apiKey });
     const docs = await loader.load();
 
     // Use MemoryVectorStore to store the loaded documents in memory

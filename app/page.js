@@ -1,16 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import Messages from './components/messages';
 
 export default function Home() {
   const [streamedData, setStreamedData] = useState('');
   const [aiTyping, setaiTyping] = useState(false);
+  const [msgHistory, setMsgHistory] = useState([]);
+  const [userPrompt, setUserPrompt] = useState('');
+  const promptInput = useRef(null);
 
   async function handleChatPrompt(e) {
     try {
+      e.preventDefault();
+
+      const formInput = promptInput.current;
+      const userMessage = formInput.value;
+      let aiMessage = '';
+
       setaiTyping(true);
       setStreamedData('');
-      e.preventDefault();
+      setUserPrompt(userMessage);
 
       const data = new FormData(e.currentTarget);
       const response = await fetch('api/chat', {
@@ -20,19 +30,27 @@ export default function Home() {
           'Content-Type': 'application/json',
         },
       });
-
       if (!response.ok) throw new Error();
+      if (formInput) formInput.value = '';
 
       const reader = response.body.getReader();
-
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
+          setaiTyping(false);
           break;
         }
         const text = new TextDecoder().decode(value);
         setStreamedData((prevData) => prevData + text);
+        aiMessage += text;
       }
+      setMsgHistory((msgHistory) => [
+        ...msgHistory,
+        {
+          ai: aiMessage.trim(),
+          user: userMessage,
+        },
+      ]);
     } catch (error) {
       setStreamedData('Niestety nie udało się skomunikować z AI. Spróbuj później.');
     }
@@ -46,31 +64,34 @@ export default function Home() {
       if (!response.ok) throw new Error();
       setStreamedData('');
       setaiTyping(false);
+      setMsgHistory([]);
     } catch (error) {
       setStreamedData('Wystąpił problem i niestety nie udało się wyczyścić historii czatu.');
     }
   }
 
   return (
-    <div className="flex flex-col gap-3 w-full max-w-6xl mx-auto min-h-screen justify-between px-3 py-2">
+    <div className="flex flex-col gap-3 w-full max-w-6xl mx-auto min-h-screen justify-between px-3 py-2 ">
       <header className="border-gray-600 border-solid border-b pt-8">
-        <h1 className="font-extrabold text-center text-5xl text-gray-300">City Break Chat</h1>
-        <p className="text-gray-400 py-6">
+        <h1 className="font-extrabold text-center text-xl lg:text-5xl text-gray-300">City Break Chat</h1>
+        <p className="text-gray-400 text-sm lg:text-base py-6">
           City Break to sztuczna inteligencja, która może odpowiadać na pytania dotyczące miast w Polsce w oparciu o dane dostępne w internecie. Możesz zadać
           jej pytania dotyczące historii, kultury, geografii lub gospodarki miasta.
         </p>
       </header>
-      <main className=" h-full grow flex flex-col justify-end rounded-lg p-3 pb-0  ">
-        <div className="grow">
+      <main className=" grow  flex flex-col justify-between rounded-lg p-3 pb-0  ">
+        <div className="lg:max-h-[62vh] overflow-auto self">
+          {msgHistory.length > 0 &&
+            msgHistory.map((msg, i) => {
+              return <Messages key={i} userPrompt={msg.user} streamedData={msg.ai}></Messages>;
+            })}
           {aiTyping && (
-            <div className="my-4">
-              <h2 className="text-xl text-gray-300">AI Assistant</h2>
-              <p className="text-gray-400 rounded-lg bg-zinc-700 p-2 ">{streamedData || 'Poczekaj! AI szuka dla Ciebie najlepszej odpowiedzi.'}</p>
-            </div>
+            <Messages userPrompt={userPrompt} streamedData={streamedData} aiTypingMsg="Poczekaj! AI szuka dla Ciebie najlepszej odpowiedzi."></Messages>
           )}
         </div>
-        <form onSubmit={handleChatPrompt} action="" className="relative">
+        <form onSubmit={handleChatPrompt} action="" className="relative mt-10">
           <input
+            ref={promptInput}
             aria-label="Wprowadź zapytanie do AI"
             type=""
             required
