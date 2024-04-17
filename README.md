@@ -46,7 +46,7 @@ touch .env.local
 
 ```
 SERPAPI_API_KEY='yourSERPApiKey'
-OLLAMA_PORT=11434 // default
+OLLAMA_PORT=11434
 ```
 
 ### 5. Run the app
