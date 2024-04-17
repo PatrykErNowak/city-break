@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# City Break Chat
+
+City Break is an artificial intelligence that can answer questions about cities in Poland based on data available online. You can ask it questions about the city's history, culture, geography or economy.
+
+## Tech-Stack
+
+I decided to create a fullstack application based on JavaScript.
+
+- [Next.js](https://nextjs.org) - Framework
+- [TailwindCSS](https://tailwindcss.com) - CSS
+- [LangChain.js](https://js.langchain.com/docs/get_started/introduction) – LLC Framework
+- [Ollama](https://ollama.com)/[openchat](https://ollama.com/library/openchat)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+Here's what you need to be able to run City Break
+
+- Node.js (version >= 18)
+- Local [OLLAMA](https://ollama.com) server with ['OPENCHAT'](https://ollama.com/library/openchat) model available and port set to :11434 (default port). If you change the port, change the application port - in the ".env.local" file
+- API key for https://serpapi.com. Generate the API key and place it in the file - .env.local
+
+### 1. Clone this repository
+
+```
+git clone https://github.com/mfts/papermark.git
+cd city-break
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Create `.env.local` file
+
+```bash
+touch .env.local
+```
+
+### 4. Edit `.env.local`
+
+```
+SERPAPI_API_KEY='yourSERPApiKey'
+OLLAMA_PORT=11434 // default
+```
+
+### 5. Run the app
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 6. Open the app in your browser
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Visit http://localhost:3000 in your browser.
