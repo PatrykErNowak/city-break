@@ -2,6 +2,8 @@
 
 City Break is an artificial intelligence that can answer questions about cities in Poland based on data available online. You can ask it questions about the city's history, culture, geography or economy.
 
+![city-break-hat](https://github.com/PatrykErNowak/city-break/assets/111689089/af19e2ca-df67-4e6a-bd65-37b800b26a4d)
+
 ## Tech-Stack
 
 I decided to create a fullstack application based on JavaScript.
@@ -24,7 +26,7 @@ Here's what you need to be able to run City Break
 ### 1. Clone this repository
 
 ```
-git clone https://github.com/mfts/papermark.git
+git clone https://github.com/PatrykErNowak/city-break.git
 cd city-break
 ```
 
