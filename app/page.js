@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import Messages from './components/messages';
 
 export default function Home() {
@@ -8,19 +8,15 @@ export default function Home() {
   const [aiTyping, setaiTyping] = useState(false);
   const [msgHistory, setMsgHistory] = useState([]);
   const [userPrompt, setUserPrompt] = useState('');
-  const promptInput = useRef(null);
 
   async function handleChatPrompt(e) {
     try {
       e.preventDefault();
 
-      const formInput = promptInput.current;
-      const userMessage = formInput.value;
       let aiMessage = '';
 
       setaiTyping(true);
       setStreamedData('');
-      setUserPrompt(userMessage);
 
       const data = new FormData(e.currentTarget);
       const response = await fetch('api/chat', {
@@ -31,7 +27,6 @@ export default function Home() {
         },
       });
       if (!response.ok) throw new Error();
-      if (formInput) formInput.value = '';
 
       const reader = response.body.getReader();
       while (true) {
@@ -48,9 +43,10 @@ export default function Home() {
         ...msgHistory,
         {
           ai: aiMessage.trim(),
-          user: userMessage,
+          user: userPrompt,
         },
       ]);
+      setUserPrompt('');
     } catch (error) {
       setStreamedData('Niestety nie udało się skomunikować z AI. Spróbuj później.');
     }
@@ -91,7 +87,8 @@ export default function Home() {
         </div>
         <form onSubmit={handleChatPrompt} action="" className="relative mt-10">
           <input
-            ref={promptInput}
+            value={userPrompt}
+            onChange={(e) => setUserPrompt(e.target.value)}
             aria-label="Wprowadź zapytanie do AI"
             type=""
             required
