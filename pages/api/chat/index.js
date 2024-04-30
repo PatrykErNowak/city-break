@@ -9,6 +9,7 @@ import { ConversationChain } from 'langchain/chains';
 
 import { LLMChain } from 'langchain/chains';
 import { BufferMemory, ChatMessageHistory } from 'langchain/memory';
+import { StringOutputParser } from '@langchain/core/output_parsers';
 
 // CONFIG
 const apiKey = process.env.SERPAPI_API_KEY;
@@ -21,11 +22,27 @@ const ollamaConfig = {
 };
 
 const systemChatPrompts = {
-  convertToQuery: `Do not respond to a question, just only convert {input} into a polish search query for browser engine. Respond in template:
-    search query`,
+  convertToQuery: `You are a assistant to help convert user {input} into search query about specific city in Poland.
+
+    Follow the rules:
+  - Respond always in polish language
+  - Never answer to a user question
+  - Return only the keywords from {input} according to template below
+
+  Respond in Template:
+  City - keywords 
+
+  Examples:
+  User input: Gdzie leży Lublin?
+  Answer: Lublin - lokalizacja
+  User input: Jaka jest jego powierzchnia?
+  Answer: Lubiin - powierzchnia
+
+  `,
   handleChatPrompt: {
-    mainFlow: `You are an expert in providing information about cities in Poland. Answer in polish the user's questions based on the below context:\n\n{context}`,
-    errorFlow: 'Inform the person that you are responding based on the data available in your database in polish.',
+    mainFlow: `You are an expert in providing information about cities in Poland.Try to retrieve the most newest informations. Answer in polish the user's questions based on the below context:\n\n{context}`,
+    errorFlow: `Respond in polish in template: 
+    Niestety nie udało mi sie pobrać najnowszych danych, dlatego odpowiem na podstawie własnej wiedzy. respond`,
   },
 };
 // ----------------------------------------------------
@@ -71,6 +88,8 @@ function userInputToQuery(userInput) {
         ...ollamaConfig,
       });
 
+      const parser = new StringOutputParser();
+
       const chatPromptMemory = new BufferMemory({
         memoryKey: 'chat_history',
         returnMessages: true,
@@ -88,6 +107,7 @@ function userInputToQuery(userInput) {
         prompt: chatPrompt,
         verbose: true,
         memory: chatPromptMemory,
+        outputParser: parser,
       });
 
       const res = await chatConversationChain.invoke({ input: userInput });
@@ -130,7 +150,7 @@ async function handleChatPrompt(req, res) {
   try {
     // Define your question and query
     const query = await userInputToQuery(userPrompt);
-    const question = query;
+    const question = userPrompt;
 
     // Use SerpAPILoader to load web search results
     const loader = new SerpAPILoader({ q: query, apiKey });
@@ -141,6 +161,7 @@ async function handleChatPrompt(req, res) {
 
     const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
       ['system', systemChatPrompts.handleChatPrompt.mainFlow],
+      new MessagesPlaceholder('chat_history'),
       ['human', '{input}'],
     ]);
 
@@ -155,6 +176,7 @@ async function handleChatPrompt(req, res) {
     });
     const aiAnswer = await chain.invoke({
       input: question,
+      chat_history: [...memory.chatHistory.messages],
     });
     memory.chatHistory.addUserMessage(query);
     memory.chatHistory.addAIChatMessage(aiAnswer.answer);
