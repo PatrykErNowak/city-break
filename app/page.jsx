@@ -10,22 +10,24 @@ import Footer from './components/Footer';
 import PromptInput from './components/Main/PromptInput';
 import Button from './components/Button';
 
+let userMessage = '';
+
 export default function Home() {
   const [streamedData, setStreamedData] = useState('');
   const [aiTyping, setaiTyping] = useState(false);
   const [msgHistory, setMsgHistory] = useState([]);
   const [userPrompt, setUserPrompt] = useState('');
 
-  const userMessage = userPrompt;
-
   async function handleChatPrompt(e) {
     try {
       e.preventDefault();
 
       let aiMessage = '';
+      userMessage = userPrompt;
 
       setaiTyping(true);
       setStreamedData('');
+      setUserPrompt('');
 
       const data = new FormData(e.currentTarget);
       const response = await fetch('api/chat', {
@@ -55,8 +57,6 @@ export default function Home() {
           user: userMessage,
         },
       ]);
-
-      setUserPrompt('');
     } catch (error) {
       setStreamedData('Niestety nie udało się skomunikować z AI. Spróbuj później.');
     }
@@ -71,6 +71,7 @@ export default function Home() {
       setStreamedData('');
       setaiTyping(false);
       setMsgHistory([]);
+      setUserPrompt('');
     } catch (error) {
       setStreamedData('Wystąpił problem i niestety nie udało się wyczyścić historii czatu.');
     }
@@ -89,7 +90,7 @@ export default function Home() {
               return <Messages key={i} userPrompt={msg.user} streamedData={msg.ai}></Messages>;
             })}
           {aiTyping && (
-            <Messages userPrompt={userPrompt} streamedData={streamedData} aiTypingMsg="Poczekaj! AI szuka dla Ciebie najlepszej odpowiedzi."></Messages>
+            <Messages userPrompt={userMessage} streamedData={streamedData} aiTypingMsg="Poczekaj! AI szuka dla Ciebie najlepszej odpowiedzi."></Messages>
           )}
         </MessagesBox>
         <ChatForm onSubmit={handleChatPrompt}>

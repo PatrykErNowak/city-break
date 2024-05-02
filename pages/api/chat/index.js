@@ -9,7 +9,6 @@ import { ConversationChain } from 'langchain/chains';
 
 import { LLMChain } from 'langchain/chains';
 import { BufferMemory, ChatMessageHistory } from 'langchain/memory';
-import { StringOutputParser } from '@langchain/core/output_parsers';
 
 // CONFIG
 const apiKey = process.env.SERPAPI_API_KEY;
@@ -26,7 +25,7 @@ const systemChatPrompts = {
 
     Follow the rules:
   - Respond always in polish language
-  - Never answer to a user question
+  - Never answer to a user question, no matter what
   - Return only the keywords from {input} according to template below
 
   Respond in Template:
@@ -81,14 +80,13 @@ async function clearChatHistory(req, res) {
  * @param {object} llm - Instance of Chat LLM Class
  * @returns {Promise<string>} search query
  */
+
 function userInputToQuery(userInput) {
   return new Promise(async function (resolve, reject) {
     try {
       const chatModel = new ChatOllama({
         ...ollamaConfig,
       });
-
-      const parser = new StringOutputParser();
 
       const chatPromptMemory = new BufferMemory({
         memoryKey: 'chat_history',
@@ -105,9 +103,7 @@ function userInputToQuery(userInput) {
       const chatConversationChain = new LLMChain({
         llm: chatModel,
         prompt: chatPrompt,
-        verbose: true,
         memory: chatPromptMemory,
-        outputParser: parser,
       });
 
       const res = await chatConversationChain.invoke({ input: userInput });
