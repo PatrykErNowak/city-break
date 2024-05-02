@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Messages from './components/Main/messages';
 import Header from './components/Header';
 import Main from './components/Main/Main';
 import MessagesBox from './components/Main/MessagesBox';
@@ -9,7 +8,10 @@ import ChatForm from './components/Main/ChatForm';
 import Footer from './components/Footer';
 import PromptInput from './components/Main/PromptInput';
 import Button from './components/Button';
+import Message from './components/Main/Message';
 
+const aiErrorMessage = 'Niestety nie udało się skomunikować z AI. Spróbuj później.';
+const clearChatErroMessage = 'Wystąpił problem i niestety nie udało się wyczyścić historii czatu.';
 let userMessage = '';
 
 export default function Home() {
@@ -18,12 +20,25 @@ export default function Home() {
   const [msgHistory, setMsgHistory] = useState([]);
   const [userPrompt, setUserPrompt] = useState('');
 
+  // Helper function
+  function addMsgToHistoryState({ message, type }) {
+    setMsgHistory((msgHistory) => [
+      ...msgHistory,
+      {
+        message,
+        type,
+      },
+    ]);
+  }
+
   async function handleChatPrompt(e) {
     try {
       e.preventDefault();
 
       let aiMessage = '';
       userMessage = userPrompt;
+
+      addMsgToHistoryState({ message: userMessage, type: 'human' });
 
       setaiTyping(true);
       setStreamedData('');
@@ -50,15 +65,11 @@ export default function Home() {
         setStreamedData((prevData) => prevData + text);
         aiMessage += text;
       }
-      setMsgHistory((msgHistory) => [
-        ...msgHistory,
-        {
-          ai: aiMessage.trim(),
-          user: userMessage,
-        },
-      ]);
+      addMsgToHistoryState({ message: aiMessage, type: 'ai' });
     } catch (error) {
-      setStreamedData('Niestety nie udało się skomunikować z AI. Spróbuj później.');
+      setStreamedData(aiErrorMessage);
+      setaiTyping(false);
+      addMsgToHistoryState({ message: aiErrorMessage, type: 'ai' });
     }
   }
 
@@ -73,7 +84,7 @@ export default function Home() {
       setMsgHistory([]);
       setUserPrompt('');
     } catch (error) {
-      setStreamedData('Wystąpił problem i niestety nie udało się wyczyścić historii czatu.');
+      setStreamedData(clearChatErroMessage);
     }
   }
 
@@ -84,14 +95,12 @@ export default function Home() {
         pytania dotyczące historii, kultury, geografii lub gospodarki miasta.
       </Header>
       <Main>
-        <MessagesBox>
+        <MessagesBox scrollTrigger={msgHistory}>
           {msgHistory.length > 0 &&
             msgHistory.map((msg, i) => {
-              return <Messages key={i} userPrompt={msg.user} streamedData={msg.ai}></Messages>;
+              return <Message data={msg} key={i}></Message>;
             })}
-          {aiTyping && (
-            <Messages userPrompt={userMessage} streamedData={streamedData} aiTypingMsg="Poczekaj! AI szuka dla Ciebie najlepszej odpowiedzi."></Messages>
-          )}
+          {aiTyping && <Message data={{ message: streamedData }}></Message>}
         </MessagesBox>
         <ChatForm onSubmit={handleChatPrompt}>
           <PromptInput value={userPrompt} onChange={(e) => setUserPrompt(e.target.value)} name="prompt" id="prompt"></PromptInput>
