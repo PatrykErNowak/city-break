@@ -110,7 +110,7 @@ export default function Home() {
             </svg>
           </Button>
           {streamedData && (
-            <Button onClick={handleClearChat} className="px-4 py-2 absolute -top-7 right-1/2 -translate-y-1/2 translate-x-1/2">
+            <Button onClick={handleClearChat} className="px-4 py-2 absolute -top-7 right-1/2 -translate-y-1/2 translate-x-1/2 w-max">
               Wyczyść historię czatu
             </Button>
           )}
