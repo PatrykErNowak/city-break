@@ -11,7 +11,7 @@ I decided to create a fullstack application based on JavaScript.
 - [Next.js](https://nextjs.org) - Framework
 - [TailwindCSS](https://tailwindcss.com) - CSS
 - [LangChain.js](https://js.langchain.com/docs/get_started/introduction) – LLC Framework
-- [Ollama](https://ollama.com)/[openchat](https://ollama.com/library/openchat)
+- [Ollama](https://ollama.com)/[llama3](https://ollama.com/library/llama3)
 
 ## Getting Started
 
@@ -20,7 +20,7 @@ I decided to create a fullstack application based on JavaScript.
 Here's what you need to be able to run City Break
 
 - Node.js (version >= 18)
-- Local [OLLAMA](https://ollama.com) server with ['OPENCHAT'](https://ollama.com/library/openchat) model available and port set to :11434 (default port). If you change the port, change the application port - in the ".env.local" file
+- Local [OLLAMA](https://ollama.com) server with ['llama3'](https://ollama.com/library/llama3) model available and port set to :11434 (default port). If you change the port, change the application port - in the ".env.local" file
 - API key for https://serpapi.com. Generate the API key and place it in the file - .env.local
 
 ### 1. Clone this repository
